@@ -67,12 +67,25 @@ function App() {
                     저장소 불러오기
                 </button>
             </section>
+
             {errorMessage !== "" && <p>{errorMessage}</p>}
 
             <section className="repo-list">
                 {repos.map((repo) => (
                     <article key={repo.id} className="repo-card">
                         <h2>{repo.name}</h2>
+                        <p>{repo.description ?? "설명이 없습니다."}</p>
+                        <p className="repo-meta">사용 언어: {repo.language ?? "언어 정보 없음"}</p>
+                        <p className="repo-meta">최근 업데이트: {repo.updated_at}</p>
+                        <a href={repo.html_url} target="_blank" rel="noopener noreferrer">
+                            GitHub 보기
+                        </a>
+
+                        {repo.homepage && (
+                            <a href={repo.homepage} target="_blank" rel="noreferrer">
+                                배포 링크 보기
+                            </a>
+                        )}
                     </article>
                 ))}
             </section>

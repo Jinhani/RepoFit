@@ -11,11 +11,14 @@ type Repo = {
     homepage: string | null;
 };
 
+type StatusFilter = "all" | "ready" | "needsWork";
+
 function App() {
     const [username, setUsername] = useState("");
     const [repos, setRepos] = useState<Repo[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [errorMessage, setErrorMessage] = useState("");
+    const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
 
     async function handleSearch() {
         const trimmedUsername = username.trim();
@@ -28,7 +31,9 @@ function App() {
         setIsLoading(true);
         setErrorMessage("");
         setRepos([]);
+        setStatusFilter("all");
 
+        // fetch는 404가 와도 자동으로 catch로 가지 않음 그래서 response.ok를 직접 확인해야 함
         try {
             const response = await fetch(`https://api.github.com/users/${trimmedUsername}/repos`);
 
@@ -45,6 +50,25 @@ function App() {
             setIsLoading(false);
         }
     }
+
+    const visibleRepos = repos.filter((repo) => {
+        const hasLanguage = repo.language !== null;
+
+        const homepageUrl = repo.homepage?.trim() ?? "";
+        const hasHomepage = homepageUrl !== "";
+
+        const isPortfolioReady = hasLanguage && hasHomepage;
+
+        if (statusFilter === "all") {
+            return true;
+        }
+
+        if (statusFilter === "ready") {
+            return isPortfolioReady;
+        }
+
+        return !isPortfolioReady;
+    });
 
     return (
         <main className="app">
@@ -70,28 +94,61 @@ function App() {
 
             {errorMessage !== "" && <p>{errorMessage}</p>}
 
+            {repos.length > 0 && (
+                <section className="filter-section">
+                    <button
+                        onClick={() => {
+                            setStatusFilter("all");
+                        }}
+                        className={statusFilter === "all" ? "active-filter" : ""}
+                    >
+                        전체
+                    </button>
+
+                    <button
+                        onClick={() => {
+                            setStatusFilter("ready");
+                        }}
+                        className={statusFilter === "ready" ? "active-filter" : ""}
+                    >
+                        기본 조건 충족
+                    </button>
+
+                    <button
+                        onClick={() => {
+                            setStatusFilter("needsWork");
+                        }}
+                        className={statusFilter === "needsWork" ? "active-filter" : ""}
+                    >
+                        보완 필요
+                    </button>
+                </section>
+            )}
+
             <section className="repo-list">
-                {repos.map((repo) => {
+                {visibleRepos.map((repo) => {
                     const hasDescription = repo.description !== null && repo.description.trim() !== "";
                     const hasLanguage = repo.language !== null;
-                    const hasHomepage = repo.homepage !== null && repo.homepage.trim() !== "";
 
-                    const isPortfolioReady = hasDescription && hasLanguage && hasHomepage;
+                    const homepageUrl = repo.homepage?.trim() ?? "";
+                    const hasHomepage = homepageUrl !== "";
+
+                    const isPortfolioReady = hasLanguage && hasHomepage;
 
                     return (
                         <article key={repo.id} className="repo-card">
                             <h2>{repo.name}</h2>
 
-                            <p>{repo.description ?? "설명이 없습니다."}</p>
+                            {hasDescription && <p>{repo.description}</p>}
 
                             <p className="repo-meta">사용 언어: {repo.language ?? "언어 정보 없음"}</p>
 
                             <p className="repo-meta">최근 업데이트: {repo.updated_at}</p>
 
                             <div className="repo-check-list">
-                                <p>{hasDescription ? "설명 있음" : "설명 없음"}</p>
+                                <p>{hasDescription ? "저장소 설명 있음" : "저장소 설명 보완 권장"}</p>
                                 <p>{hasLanguage ? "언어 있음" : "언어 없음"}</p>
-                                <p>{hasHomepage ? "배포 링크 있음" : "배포 링크 없음"}</p>
+                                <p>{hasHomepage ? "배포 링크 있음" : "보완 필요! 배포 링크 없음"}</p>
                             </div>
 
                             <p className={isPortfolioReady ? "ready" : "not-ready"}>
@@ -103,7 +160,7 @@ function App() {
                             </a>
 
                             {hasHomepage && (
-                                <a href={repo.homepage} target="_blank" rel="noopener noreferrer">
+                                <a href={homepageUrl} target="_blank" rel="noopener noreferrer">
                                     배포 링크 보기
                                 </a>
                             )}
@@ -111,7 +168,7 @@ function App() {
                     );
                 })}
             </section>
-            <p className="current-value">현재 입력값: {username}</p>
+            <p className="current-value">{username}</p>
         </main>
     );
 }

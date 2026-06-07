@@ -11,7 +11,7 @@ type Repo = {
     homepage: string | null;
 };
 
-type StatusFilter = "all" | "ready" | "needsWork";
+type StatusFilter = "all" | "ready" | "needsWork" | "selected";
 
 function App() {
     const [username, setUsername] = useState("");
@@ -79,6 +79,10 @@ function App() {
             return isPortfolioReady;
         }
 
+        if (statusFilter === "selected") {
+            return selectedRepoIds.includes(repo.id);
+        }
+
         return !isPortfolioReady;
     });
 
@@ -116,6 +120,14 @@ function App() {
                         className={statusFilter === "all" ? "active-filter" : ""}
                     >
                         전체
+                    </button>
+                    <button
+                        onClick={() => {
+                            setStatusFilter("selected");
+                        }}
+                        className={statusFilter === "selected" ? "active-filter" : ""}
+                    >
+                        후보
                     </button>
 
                     <button

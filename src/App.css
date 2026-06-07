@@ -214,3 +214,21 @@ input {
 .repo-actions a:hover {
     text-decoration: underline;
 }
+.repo-note {
+    width: 100%;
+    min-height: 80px;
+    margin-top: 14px;
+    padding: 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 12px;
+    resize: vertical;
+    font: inherit;
+    color: #111827;
+    background: #ffffff;
+}
+
+.repo-note:focus {
+    border-color: #2563eb;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}

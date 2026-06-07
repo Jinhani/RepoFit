@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import "./App.css";
 
 type Repo = {
@@ -19,7 +19,33 @@ function App() {
     const [isLoading, setIsLoading] = useState(false);
     const [errorMessage, setErrorMessage] = useState("");
     const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
-    const [selectedRepoIds, setSelectedRepoIds] = useState<number[]>([]);
+    const [selectedRepoIds, setSelectedRepoIds] = useState<number[]>(() => {
+        const savedSelectedRepoIds = localStorage.getItem("repo-fit-selected-repo-ids");
+
+        if (savedSelectedRepoIds === null) {
+            return [];
+        }
+
+        return JSON.parse(savedSelectedRepoIds);
+    });
+
+    const [repoNotes, setRepoNotes] = useState<Record<number, string>>(() => {
+        const savedRepoNotes = localStorage.getItem("repo-fit-repo-notes");
+
+        if (savedRepoNotes === null) {
+            return {};
+        }
+
+        return JSON.parse(savedRepoNotes);
+    });
+
+    useEffect(() => {
+        localStorage.setItem("repo-fit-selected-repo-ids", JSON.stringify(selectedRepoIds));
+    }, [selectedRepoIds]);
+
+    useEffect(() => {
+        localStorage.setItem("repo-fit-repo-notes", JSON.stringify(repoNotes));
+    }, [repoNotes]);
 
     async function handleSearch() {
         const trimmedUsername = username.trim();
@@ -33,7 +59,7 @@ function App() {
         setErrorMessage("");
         setRepos([]);
         setStatusFilter("all");
-        setSelectedRepoIds([]);
+        // setSelectedRepoIds([]);
 
         try {
             const response = await fetch(`https://api.github.com/users/${trimmedUsername}/repos`);
@@ -60,6 +86,15 @@ function App() {
             }
 
             return [...prevSelectedIds, repoId];
+        });
+    }
+
+    function handleChangeRepoNote(repoId: number, noteText: string) {
+        setRepoNotes((prevNotes) => {
+            return {
+                ...prevNotes,
+                [repoId]: noteText,
+            };
         });
     }
 
@@ -195,13 +230,19 @@ function App() {
                                         배포 링크 보기
                                     </a>
                                 )}
+                                <textarea
+                                    className="repo-note"
+                                    value={repoNotes[repo.id] ?? ""}
+                                    onChange={(e) => {
+                                        handleChangeRepoNote(repo.id, e.target.value);
+                                    }}
+                                    placeholder="이 저장소에 대한 메모를 적어보세요. 예: README 보완 필요"
+                                />
                             </div>
                         </article>
                     );
                 })}
             </section>
-
-            <p className="current-value">{username}</p>
         </main>
     );
 }

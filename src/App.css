@@ -173,3 +173,44 @@ input {
     background: #2563eb;
     color: white;
 }
+.repo-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 14px;
+}
+
+.candidate-button {
+    border: none;
+    border-radius: 10px;
+    padding: 9px 12px;
+    background: #e5e7eb;
+    color: #374151;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.candidate-button:hover {
+    background: #d1d5db;
+}
+
+.candidate-button.selected {
+    background: #2563eb;
+    color: white;
+}
+
+.selected-card {
+    border-color: #2563eb;
+    box-shadow: 0 12px 32px rgba(37, 99, 235, 0.14);
+}
+
+.repo-actions a {
+    color: #2563eb;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.repo-actions a:hover {
+    text-decoration: underline;
+}

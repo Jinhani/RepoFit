@@ -41,8 +41,6 @@ function App() {
         return JSON.parse(savedRepoNotes);
     });
 
-    const [copiedRepoId, setCopiedRepoId] = useState<number | null>(null);
-
     const [toastMessage, setToastMessage] = useState("");
 
     useEffect(() => {
@@ -162,14 +160,13 @@ function App() {
 
         try {
             await navigator.clipboard.writeText(repoMarkdown);
-            setCopiedRepoId(repo.id);
+
             setToastMessage("카드 요약을 복사했습니다.");
 
             setTimeout(() => {
                 setToastMessage("");
             }, 1500);
         } catch {
-            setCopiedRepoId(null);
             setToastMessage("프로젝트 요약 복사에 실패했습니다.");
 
             setTimeout(() => {
@@ -360,8 +357,6 @@ function App() {
                                 >
                                     카드 요약 복사
                                 </button>
-
-                                {copiedRepoId === repo.id}
 
                                 <a
                                     className="repo-action-link"

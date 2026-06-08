@@ -364,3 +364,28 @@ textarea {
     font-weight: 800;
     box-shadow: 0 12px 28px rgba(15, 23, 42, 0.22);
 }
+.search-section input {
+    flex: 1;
+    border: 1px solid #d1d5db;
+    border-radius: 10px;
+    padding: 12px 14px;
+    color: #111827;
+    background: #ffffff;
+    caret-color: #2563eb;
+}
+
+.repo-search-section input {
+    width: 100%;
+    border: 1px solid #d1d5db;
+    border-radius: 12px;
+    padding: 12px 14px;
+    background: #ffffff;
+    color: #111827;
+    caret-color: #2563eb;
+}
+
+.repo-search-section input:focus {
+    border-color: #2563eb;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}

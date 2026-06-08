@@ -43,6 +43,7 @@ function App() {
     });
 
     const [toastMessage, setToastMessage] = useState("");
+    const [repoSearchText, setRepoSearchText] = useState("");
 
     useEffect(() => {
         localStorage.setItem("repo-fit-selected-repo-ids", JSON.stringify(selectedRepoIds));
@@ -66,6 +67,7 @@ function App() {
         setRepos([]);
         setStatusFilter("all");
         setSearchedUsername("");
+        setRepoSearchText("");
 
         try {
             const response = await fetch(`https://api.github.com/users/${trimmedUsername}/repos`);
@@ -79,6 +81,7 @@ function App() {
 
             setRepos(data);
             setSearchedUsername(trimmedUsername);
+            setUsername("");
         } catch {
             setErrorMessage("GitHub 저장소를 불러오는 중 문제가 발생했습니다.");
         } finally {
@@ -110,6 +113,15 @@ function App() {
         const homepageUrl = repo.homepage?.trim() ?? "";
         const hasHomepage = homepageUrl !== "";
         const isPortfolioReady = hasLanguage && hasHomepage;
+        const normalizedSearchText = repoSearchText.trim().toLowerCase();
+        const matchesSearchText =
+            normalizedSearchText === "" ||
+            repo.name.toLowerCase().includes(normalizedSearchText) ||
+            (repo.description ?? "").toLowerCase().includes(normalizedSearchText);
+
+        if (!matchesSearchText) {
+            return false;
+        }
 
         if (statusFilter === "all") {
             return true;
@@ -304,7 +316,17 @@ function App() {
                     </button>
                 </section>
             )}
-
+            {repos.length > 0 && (
+                <section className="repo-search-section">
+                    <input
+                        value={repoSearchText}
+                        onChange={(e) => {
+                            setRepoSearchText(e.target.value);
+                        }}
+                        placeholder="저장소 이름 또는 설명으로 필터링하세요. 예: react"
+                    />
+                </section>
+            )}
             {repos.length > 0 && (
                 <section className="summary-section">
                     <button onClick={handleCopyMarkdownSummary} disabled={selectedRepos.length === 0}>

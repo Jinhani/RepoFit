@@ -19,6 +19,8 @@ function App() {
     const [isLoading, setIsLoading] = useState(false);
     const [errorMessage, setErrorMessage] = useState("");
     const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+    const [copyMessage, setCopyMessage] = useState("");
+
     const [selectedRepoIds, setSelectedRepoIds] = useState<number[]>(() => {
         const savedSelectedRepoIds = localStorage.getItem("repo-fit-selected-repo-ids");
 
@@ -38,18 +40,8 @@ function App() {
 
         return JSON.parse(savedRepoNotes);
     });
-    const [copyMessage, setCopyMessage] = useState("");
-    async function handleCopyMarkdownSummary() {
-        const markdownSummary = createMarkdownSummary();
 
-        try {
-            await navigator.clipboard.writeText(markdownSummary);
-            setCopyMessage("Markdown 요약을 복사했습니다.");
-        } catch {
-            setCopyMessage("Markdown 요약 복사에 실패했습니다.");
-        }
-    }
-
+    const [copiedRepoId, setCopiedRepoId] = useState<number | null>(null);
     useEffect(() => {
         localStorage.setItem("repo-fit-selected-repo-ids", JSON.stringify(selectedRepoIds));
     }, [selectedRepoIds]);
@@ -68,9 +60,9 @@ function App() {
 
         setIsLoading(true);
         setErrorMessage("");
+        setCopyMessage("");
         setRepos([]);
         setStatusFilter("all");
-        // setSelectedRepoIds([]);
 
         try {
             const response = await fetch(`https://api.github.com/users/${trimmedUsername}/repos`);
@@ -111,10 +103,8 @@ function App() {
 
     const visibleRepos = repos.filter((repo) => {
         const hasLanguage = repo.language !== null;
-
         const homepageUrl = repo.homepage?.trim() ?? "";
         const hasHomepage = homepageUrl !== "";
-
         const isPortfolioReady = hasLanguage && hasHomepage;
 
         if (statusFilter === "all") {
@@ -136,6 +126,46 @@ function App() {
         return selectedRepoIds.includes(repo.id);
     });
 
+    const readyRepos = repos.filter((repo) => {
+        const hasLanguage = repo.language !== null;
+        const homepageUrl = repo.homepage?.trim() ?? "";
+        const hasHomepage = homepageUrl !== "";
+
+        return hasLanguage && hasHomepage;
+    });
+
+    const totalRepoCount = repos.length;
+    const readyRepoCount = readyRepos.length;
+    const needsWorkRepoCount = totalRepoCount - readyRepoCount;
+    const selectedRepoCount = selectedRepos.length;
+
+    function createRepoMarkdown(repo: Repo) {
+        const note = repoNotes[repo.id] ?? "작성한 메모가 없습니다.";
+        const homepageUrl = repo.homepage?.trim() ?? "";
+        const descriptionText = repo.description?.trim() ?? "";
+
+        return `## ${repo.name}
+
+- 설명: ${descriptionText !== "" ? descriptionText : "등록된 설명 없음"}
+- GitHub: ${repo.html_url}
+- 배포 링크: ${homepageUrl !== "" ? homepageUrl : "없음"}
+- 사용 언어: ${repo.language ?? "언어 정보 없음"}
+- 최근 업데이트: ${repo.updated_at}
+- 메모: ${note}`;
+    }
+
+    async function handleCopyRepoMarkdown(repo: Repo) {
+        const repoMarkdown = createRepoMarkdown(repo);
+
+        try {
+            await navigator.clipboard.writeText(repoMarkdown);
+            setCopiedRepoId(repo.id);
+        } catch {
+            setCopiedRepoId(null);
+            alert("프로젝트 요약 복사에 실패했습니다.");
+        }
+    }
+
     function createMarkdownSummary() {
         if (selectedRepos.length === 0) {
             return "선택한 포트폴리오 후보가 없습니다.";
@@ -156,6 +186,18 @@ function App() {
             })
             .join("\n\n");
     }
+
+    async function handleCopyMarkdownSummary() {
+        const markdownSummary = createMarkdownSummary();
+
+        try {
+            await navigator.clipboard.writeText(markdownSummary);
+            setCopyMessage("Markdown 요약을 복사했습니다.");
+        } catch {
+            setCopyMessage("Markdown 요약 복사에 실패했습니다.");
+        }
+    }
+
     return (
         <main className="app">
             <section className="app-header">
@@ -182,6 +224,30 @@ function App() {
             {errorMessage !== "" && <p>{errorMessage}</p>}
 
             {repos.length > 0 && (
+                <section className="dashboard-section">
+                    <div>
+                        <strong>{totalRepoCount}</strong>
+                        <span>전체 저장소</span>
+                    </div>
+
+                    <div>
+                        <strong>{readyRepoCount}</strong>
+                        <span>기본 조건 충족</span>
+                    </div>
+
+                    <div>
+                        <strong>{needsWorkRepoCount}</strong>
+                        <span>보완 필요</span>
+                    </div>
+
+                    <div>
+                        <strong>{selectedRepoCount}</strong>
+                        <span>포트폴리오 후보</span>
+                    </div>
+                </section>
+            )}
+
+            {repos.length > 0 && (
                 <section className="filter-section">
                     <button
                         onClick={() => {
@@ -191,6 +257,7 @@ function App() {
                     >
                         전체
                     </button>
+
                     <button
                         onClick={() => {
                             setStatusFilter("selected");
@@ -219,15 +286,17 @@ function App() {
                     </button>
                 </section>
             )}
+
             {repos.length > 0 && (
                 <section className="summary-section">
-                    <button onClick={handleCopyMarkdownSummary} disabled={selectedRepoIds.length === 0}>
+                    <button onClick={handleCopyMarkdownSummary} disabled={selectedRepos.length === 0}>
                         선택 후보 Markdown 복사
                     </button>
 
                     {copyMessage !== "" && <p>{copyMessage}</p>}
                 </section>
             )}
+
             <section className="repo-list">
                 {visibleRepos.map((repo) => {
                     const descriptionText = repo.description?.trim() ?? "";
@@ -243,17 +312,22 @@ function App() {
                     return (
                         <article key={repo.id} className={isSelected ? "repo-card selected-card" : "repo-card"}>
                             <h2>{repo.name}</h2>
+
                             {hasDescription && <p>{descriptionText}</p>}
+
                             <p className="repo-meta">사용 언어: {repo.language ?? "언어 정보 없음"}</p>
                             <p className="repo-meta">최근 업데이트: {repo.updated_at}</p>
+
                             <div className="repo-check-list">
                                 <p>{hasDescription ? "저장소 설명 있음" : "저장소 설명 보완 권장"}</p>
                                 <p>{hasLanguage ? "언어 있음" : "언어 없음"}</p>
                                 <p>{hasHomepage ? "배포 링크 있음" : "보완 필요! 배포 링크 없음"}</p>
                             </div>
+
                             <p className={isPortfolioReady ? "ready" : "not-ready"}>
                                 {isPortfolioReady ? "포트폴리오 기본 조건 충족" : "보완 필요"}
                             </p>
+
                             <div className="repo-actions">
                                 <button
                                     className={isSelected ? "candidate-button selected" : "candidate-button"}
@@ -264,24 +338,46 @@ function App() {
                                     {isSelected ? "후보에서 제거" : "후보 추가"}
                                 </button>
 
-                                <a href={repo.html_url} target="_blank" rel="noopener noreferrer">
+                                <button
+                                    className="copy-card-button"
+                                    onClick={() => {
+                                        handleCopyRepoMarkdown(repo);
+                                    }}
+                                >
+                                    카드 요약 복사
+                                </button>
+
+                                {copiedRepoId === repo.id && <span className="copy-feedback">복사됨</span>}
+
+                                <a
+                                    className="repo-action-link"
+                                    href={repo.html_url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                >
                                     GitHub 보기
                                 </a>
 
                                 {hasHomepage && (
-                                    <a href={homepageUrl} target="_blank" rel="noopener noreferrer">
+                                    <a
+                                        className="repo-action-link"
+                                        href={homepageUrl}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                    >
                                         배포 링크 보기
                                     </a>
                                 )}
-                                <textarea
-                                    className="repo-note"
-                                    value={repoNotes[repo.id] ?? ""}
-                                    onChange={(e) => {
-                                        handleChangeRepoNote(repo.id, e.target.value);
-                                    }}
-                                    placeholder="이 저장소에 대한 메모를 적어보세요. 예: README 보완 필요"
-                                />
                             </div>
+
+                            <textarea
+                                className="repo-note"
+                                value={repoNotes[repo.id] ?? ""}
+                                onChange={(e) => {
+                                    handleChangeRepoNote(repo.id, e.target.value);
+                                }}
+                                placeholder="이 저장소에 대한 메모를 적어보세요. 예: README 보완 필요"
+                            />
                         </article>
                     );
                 })}
@@ -292,5 +388,6 @@ function App() {
 
 export default App;
 
-// 버튼 클릭 -> GitHub API 요청 -> JSON 응답 받기 -> repos state에 저장 -> visibleRepos로 필터링 -> 화면에 map으로 출력
-// 내가 만든 데이터가 아니라 외부 API에서 받은 데이터를 state에 넣고, 그 데이터를 기준으로 화면과 후보 선택 상태를 관리한다.
+// 버튼 클릭 -> GitHub API 요청 -> JSON 응답 받기 -> repos state에 저장
+// visibleRepos로 필터링 -> 화면에 map으로 출력
+// 후보 선택, 메모, localStorage 저장, Markdown 복사 기능을 관리한다.

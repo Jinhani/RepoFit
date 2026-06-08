@@ -42,6 +42,9 @@ function App() {
     });
 
     const [copiedRepoId, setCopiedRepoId] = useState<number | null>(null);
+
+    const [toastMessage, setToastMessage] = useState("");
+
     useEffect(() => {
         localStorage.setItem("repo-fit-selected-repo-ids", JSON.stringify(selectedRepoIds));
     }, [selectedRepoIds]);
@@ -160,9 +163,18 @@ function App() {
         try {
             await navigator.clipboard.writeText(repoMarkdown);
             setCopiedRepoId(repo.id);
+            setToastMessage("카드 요약을 복사했습니다.");
+
+            setTimeout(() => {
+                setToastMessage("");
+            }, 1500);
         } catch {
             setCopiedRepoId(null);
-            alert("프로젝트 요약 복사에 실패했습니다.");
+            setToastMessage("프로젝트 요약 복사에 실패했습니다.");
+
+            setTimeout(() => {
+                setToastMessage("");
+            }, 1500);
         }
     }
 
@@ -192,9 +204,11 @@ function App() {
 
         try {
             await navigator.clipboard.writeText(markdownSummary);
-            setCopyMessage("Markdown 요약을 복사했습니다.");
+            setCopyMessage("마크다운 요약을 복사했습니다.");
+            setToastMessage("선택 후보 마크다운을 복사했습니다.");
         } catch {
-            setCopyMessage("Markdown 요약 복사에 실패했습니다.");
+            setCopyMessage("마크다운 요약 복사에 실패했습니다.");
+            setToastMessage("마크다운 요약 복사에 실패했습니다.");
         }
     }
 
@@ -290,7 +304,7 @@ function App() {
             {repos.length > 0 && (
                 <section className="summary-section">
                     <button onClick={handleCopyMarkdownSummary} disabled={selectedRepos.length === 0}>
-                        선택 후보 Markdown 복사
+                        선택 후보 마크다운 복사
                     </button>
 
                     {copyMessage !== "" && <p>{copyMessage}</p>}
@@ -347,7 +361,7 @@ function App() {
                                     카드 요약 복사
                                 </button>
 
-                                {copiedRepoId === repo.id && <span className="copy-feedback">복사됨</span>}
+                                {copiedRepoId === repo.id}
 
                                 <a
                                     className="repo-action-link"
@@ -382,6 +396,7 @@ function App() {
                     );
                 })}
             </section>
+            {toastMessage !== "" && <div className="toast-message">{toastMessage}</div>}
         </main>
     );
 }

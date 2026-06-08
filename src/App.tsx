@@ -38,6 +38,17 @@ function App() {
 
         return JSON.parse(savedRepoNotes);
     });
+    const [copyMessage, setCopyMessage] = useState("");
+    async function handleCopyMarkdownSummary() {
+        const markdownSummary = createMarkdownSummary();
+
+        try {
+            await navigator.clipboard.writeText(markdownSummary);
+            setCopyMessage("Markdown 요약을 복사했습니다.");
+        } catch {
+            setCopyMessage("Markdown 요약 복사에 실패했습니다.");
+        }
+    }
 
     useEffect(() => {
         localStorage.setItem("repo-fit-selected-repo-ids", JSON.stringify(selectedRepoIds));
@@ -121,6 +132,30 @@ function App() {
         return !isPortfolioReady;
     });
 
+    const selectedRepos = repos.filter((repo) => {
+        return selectedRepoIds.includes(repo.id);
+    });
+
+    function createMarkdownSummary() {
+        if (selectedRepos.length === 0) {
+            return "선택한 포트폴리오 후보가 없습니다.";
+        }
+
+        return selectedRepos
+            .map((repo, index) => {
+                const note = repoNotes[repo.id] ?? "작성한 메모가 없습니다.";
+                const homepageUrl = repo.homepage?.trim() ?? "";
+
+                return `## ${index + 1}. ${repo.name}
+
+- GitHub: ${repo.html_url}
+- 배포 링크: ${homepageUrl !== "" ? homepageUrl : "없음"}
+- 사용 언어: ${repo.language ?? "언어 정보 없음"}
+- 최근 업데이트: ${repo.updated_at}
+- 메모: ${note}`;
+            })
+            .join("\n\n");
+    }
     return (
         <main className="app">
             <section className="app-header">
@@ -184,7 +219,15 @@ function App() {
                     </button>
                 </section>
             )}
+            {repos.length > 0 && (
+                <section className="summary-section">
+                    <button onClick={handleCopyMarkdownSummary} disabled={selectedRepoIds.length === 0}>
+                        선택 후보 Markdown 복사
+                    </button>
 
+                    {copyMessage !== "" && <p>{copyMessage}</p>}
+                </section>
+            )}
             <section className="repo-list">
                 {visibleRepos.map((repo) => {
                     const descriptionText = repo.description?.trim() ?? "";

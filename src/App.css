@@ -15,7 +15,8 @@ body {
 }
 
 button,
-input {
+input,
+textarea {
     font: inherit;
 }
 
@@ -216,7 +217,7 @@ input {
 }
 .repo-note {
     width: 100%;
-    min-height: 80px;
+    min-height: 88px;
     margin-top: 14px;
     padding: 12px;
     border: 1px solid #d1d5db;
@@ -225,10 +226,70 @@ input {
     font: inherit;
     color: #111827;
     background: #ffffff;
+    line-height: 1.5;
+}
+
+.repo-note::placeholder {
+    color: #94a3b8;
 }
 
 .repo-note:focus {
     border-color: #2563eb;
     outline: none;
     box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+.summary-section {
+    margin: 18px 0;
+    padding: 16px;
+    border: 1px solid #e5e7eb;
+    border-radius: 14px;
+    background: #ffffff;
+}
+
+.summary-section button {
+    border: none;
+    border-radius: 10px;
+    padding: 10px 14px;
+    background: #111827;
+    color: white;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.summary-section button:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.summary-section p {
+    margin: 10px 0 0;
+    color: #475569;
+}
+@media (max-width: 560px) {
+    .app {
+        padding: 36px 14px;
+    }
+
+    .app-header h1 {
+        font-size: 32px;
+    }
+
+    .search-section {
+        flex-direction: column;
+    }
+
+    .search-section button {
+        width: 100%;
+    }
+
+    .repo-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .repo-actions button,
+    .repo-actions a {
+        width: 100%;
+        text-align: center;
+    }
 }

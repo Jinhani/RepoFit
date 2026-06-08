@@ -133,6 +133,16 @@ textarea {
     color: white;
 }
 
+.searched-user {
+    margin: 18px 0 0;
+    color: #64748b;
+    font-size: 15px;
+}
+
+.searched-user strong {
+    color: #111827;
+    font-weight: 800;
+}
 .summary-section {
     margin: 18px 0;
     padding: 16px;

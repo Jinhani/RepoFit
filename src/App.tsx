@@ -15,6 +15,7 @@ type StatusFilter = "all" | "ready" | "needsWork" | "selected";
 
 function App() {
     const [username, setUsername] = useState("");
+    const [searchedUsername, setSearchedUsername] = useState("");
     const [repos, setRepos] = useState<Repo[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [errorMessage, setErrorMessage] = useState("");
@@ -64,6 +65,7 @@ function App() {
         setCopyMessage("");
         setRepos([]);
         setStatusFilter("all");
+        setSearchedUsername("");
 
         try {
             const response = await fetch(`https://api.github.com/users/${trimmedUsername}/repos`);
@@ -76,6 +78,7 @@ function App() {
             const data: Repo[] = await response.json();
 
             setRepos(data);
+            setSearchedUsername(trimmedUsername);
         } catch {
             setErrorMessage("GitHub 저장소를 불러오는 중 문제가 발생했습니다.");
         } finally {
@@ -222,7 +225,7 @@ function App() {
                     onChange={(e) => {
                         setUsername(e.target.value);
                     }}
-                    placeholder="GitHub 아이디를 입력하세요. 예: Jinhani"
+                    placeholder="GitHub 아이디를 입력하세요."
                 />
 
                 <button onClick={handleSearch} disabled={username.trim() === ""}>
@@ -233,7 +236,11 @@ function App() {
             {isLoading && <p>저장소를 불러오는 중입니다...</p>}
 
             {errorMessage !== "" && <p>{errorMessage}</p>}
-
+            {searchedUsername !== "" && (
+                <p className="searched-user">
+                    검색한 GitHub 아이디: <strong>{searchedUsername}</strong>
+                </p>
+            )}
             {repos.length > 0 && (
                 <section className="dashboard-section">
                     <div>

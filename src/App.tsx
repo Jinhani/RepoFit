@@ -337,6 +337,12 @@ function App() {
                 </section>
             )}
 
+            {repos.length > 0 && visibleRepos.length === 0 && (
+                <section className="empty-state">
+                    <h2>조건에 맞는 저장소가 없습니다.</h2>
+                    <p>검색어를 바꾸거나 다른 필터를 선택해보세요.</p>
+                </section>
+            )}
             <section className="repo-list">
                 {visibleRepos.map((repo) => {
                     const descriptionText = repo.description?.trim() ?? "";

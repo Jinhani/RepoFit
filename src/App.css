@@ -146,11 +146,14 @@ textarea {
 }
 .summary-section {
     margin: 18px 0;
-    padding: 16px;
+    padding: 18px;
     border: 1px solid #e5e7eb;
     border-radius: 14px;
     background: #ffffff;
-    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
 }
 
 .summary-section button {
@@ -323,6 +326,29 @@ textarea {
 .current-value {
     margin-top: 16px;
     color: #64748b;
+}
+
+.email-send-box {
+    display: flex;
+    gap: 10px;
+    width: 100%;
+    max-width: 620px;
+}
+
+.email-send-box input {
+    flex: 1;
+    min-width: 0;
+    border: 1px solid #d1d5db;
+    border-radius: 10px;
+    padding: 10px 12px;
+    color: #111827;
+    background: #ffffff;
+    caret-color: #2563eb;
+}
+
+.email-send-box button {
+    white-space: nowrap;
+    background: #2563eb;
 }
 
 @media (max-width: 560px) {

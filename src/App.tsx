@@ -256,7 +256,9 @@ function App() {
                 }),
             });
 
-            const result = await response.json();
+            const result = await response.json().catch(() => {
+                return { message: "서버 응답을 읽지 못했습니다." };
+            });
 
             if (!response.ok) {
                 throw new Error(result.message);
@@ -264,9 +266,11 @@ function App() {
 
             setEmailMessage("이메일 전송을 요청했습니다.");
             setToastMessage("이메일 전송을 요청했습니다.");
-        } catch {
-            setEmailMessage("이메일 전송에 실패했습니다.");
-            setToastMessage("이메일 전송에 실패했습니다.");
+        } catch (error) {
+            const message = error instanceof Error ? error.message : "이메일 전송에 실패했습니다.";
+
+            setEmailMessage(message);
+            setToastMessage(message);
         } finally {
             setIsSendingEmail(false);
 

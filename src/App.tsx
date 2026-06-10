@@ -45,6 +45,10 @@ function App() {
     const [toastMessage, setToastMessage] = useState("");
     const [repoSearchText, setRepoSearchText] = useState("");
 
+    const [recipientEmail, setRecipientEmail] = useState(""); // 받을 이메일
+    const [isSendingEmail, setIsSendingEmail] = useState(false); // 전송 중인지 상태
+    const [emailMessage, setEmailMessage] = useState(""); // 성공 / 실패 안내 문구
+
     useEffect(() => {
         localStorage.setItem("repo-fit-selected-repo-ids", JSON.stringify(selectedRepoIds));
     }, [selectedRepoIds]);
@@ -211,6 +215,67 @@ function App() {
             .join("\n\n");
     }
 
+    async function handleSendSummaryEmail() {
+        const trimmedEmail = recipientEmail.trim();
+
+        if (selectedRepos.length === 0) {
+            setEmailMessage("선택한 후보가 없습니다.");
+            setToastMessage("선택한 후보가 없습니다.");
+
+            setTimeout(() => {
+                setToastMessage("");
+            }, 1500);
+
+            return;
+        }
+
+        if (trimmedEmail === "") {
+            setEmailMessage("받을 이메일을 입력해주세요.");
+            setToastMessage("받을 이메일을 입력해주세요.");
+
+            setTimeout(() => {
+                setToastMessage("");
+            }, 1500);
+
+            return;
+        }
+
+        setIsSendingEmail(true);
+        setEmailMessage("");
+
+        try {
+            const response = await fetch("/api/send-summary", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    to: trimmedEmail,
+                    subject: "RepoFit 포트폴리오 후보 정리",
+                    markdownSummary: createMarkdownSummary(),
+                }),
+            });
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(result.message);
+            }
+
+            setEmailMessage("이메일 전송을 요청했습니다.");
+            setToastMessage("이메일 전송을 요청했습니다.");
+        } catch {
+            setEmailMessage("이메일 전송에 실패했습니다.");
+            setToastMessage("이메일 전송에 실패했습니다.");
+        } finally {
+            setIsSendingEmail(false);
+
+            setTimeout(() => {
+                setToastMessage("");
+            }, 1500);
+        }
+    }
+
     async function handleCopyMarkdownSummary() {
         const markdownSummary = createMarkdownSummary();
 
@@ -333,7 +398,25 @@ function App() {
                         선택 후보 마크다운 복사
                     </button>
 
+                    <div className="email-send-box">
+                        <input
+                            value={recipientEmail}
+                            onChange={(e) => {
+                                setRecipientEmail(e.target.value);
+                            }}
+                            placeholder="받을 이메일을 입력하세요."
+                        />
+
+                        <button
+                            onClick={handleSendSummaryEmail}
+                            disabled={selectedRepos.length === 0 || isSendingEmail}
+                        >
+                            {isSendingEmail ? "전송 중..." : "선택 후보 이메일 보내기"}
+                        </button>
+                    </div>
+
                     {copyMessage !== "" && <p>{copyMessage}</p>}
+                    {emailMessage !== "" && <p>{emailMessage}</p>}
                 </section>
             )}
 
